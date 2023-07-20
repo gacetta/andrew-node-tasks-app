@@ -1,6 +1,7 @@
 const express = require("express");
 const router = new express.Router();
 const User = require("../models/user");
+const auth = require('../middleware/auth');
 
 router.get("/test", (req, res) => {
   res.send("From a new file");
@@ -31,6 +32,11 @@ router.post("/users/login", async (req, res) => {
   }
 });
 
+
+router.get("/users/me", auth, async (req, res) => {
+  res.send(req.user);
+});
+
 router.get("/users/:id", async (req, res) => {
   try {
     const _id = req.params.id;
@@ -41,14 +47,6 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-router.get("/users", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (error) {
-    res.sendStatus(500);
-  }
-});
 
 router.patch("/users/:id", async (req, res) => {
   const updates = Object.keys(req.body);
