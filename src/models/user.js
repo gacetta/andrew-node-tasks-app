@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Task = require("./task");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -49,9 +50,25 @@ const userSchema = new mongoose.Schema({
   ],
 });
 
+userSchema.virtual("tasks", {
+  ref: "Task",
+  localField: "_id",
+  foreignField: "owner",
+});
+
+userSchema.methods.toJSON = function () {
+  const user = this;
+  const publicProfile = user.toObject();
+
+  delete publicProfile.password;
+  delete publicProfile.tokens;
+
+  return publicProfile;
+};
+
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  const token = jwt.sign({ id: user._id.toString() }, "thhisismynewcourse");
+  const token = jwt.sign({ id: user._id.toString() }, "thisismynewcourse");
 
   user.tokens.push({ token });
   await user.save();
@@ -60,7 +77,6 @@ userSchema.methods.generateAuthToken = async function () {
 };
 
 userSchema.statics.findByCredentials = async (email, password) => {
-  console.log("findByCredentials");
   const user = await User.findOne({ email });
 
   if (!user) throw new Error("Unable to login");
@@ -80,6 +96,15 @@ userSchema.pre("save", async function (next) {
     user.password = await bcrypt.hash(user.password, 8);
   }
 
+  next();
+});
+
+// Delete user tasks when a user is deleted
+userSchema.pre("remove", async function (next) {
+  const user = this;
+
+  const tasks = await Task.deleteMany({ owner: user._id });
+  console.log("deleted tasks:", tasks);
   next();
 });
 

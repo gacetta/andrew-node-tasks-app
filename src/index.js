@@ -6,18 +6,6 @@ const taskRouter = require("./routers/task");
 const app = express();
 const port = process.send.PORT || 3000;
 
-// app.use((req, res, next) => {
-//   if (req.method === 'GET') {
-//     res.status(400).send('GET requests are disabled')
-//   } else {
-//     next();
-//   }
-// })
-
-// app.use((req, res, next) => {
-//   res.status(503).send('Maintenance - Server is not currently accepting requests')
-// })
-
 app.use(express.json());
 app.use(userRouter);
 app.use(taskRouter);
@@ -26,16 +14,17 @@ app.listen(port, () => {
   console.log(`server is running on port: ${port}...`);
 });
 
-const jwt = require("jsonwebtoken");
+const Task = require("./models/task");
+const User = require("./models/user");
 
-const myFunc = async () => {
-  const token = jwt.sign({ _id: "abc123" }, "thisismynewcourse", {
-    expiresIn: "1h",
-  });
-  console.log(token);
+const main = async () => {
+  // const task = await Task.findById("64c419e2add5e9e96742463b");
+  // await task.populate("owner");
+  // console.log(task);
 
-  const data = jwt.verify(token, "thisismynewcourse");
-  console.log(data);
+  const user = await User.findById("64c4210e81c9777a725f82fa");
+  await user.populate("tasks");
+  console.log(user.tasks.map((task) => task.description));
 };
 
-myFunc();
+main();
