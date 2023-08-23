@@ -4,8 +4,6 @@ const User = require("../models/user");
 const auth = require("../middleware/auth");
 const multer = require("multer");
 const sharp = require("sharp");
-const { findOne, findOneAndDelete } = require("../models/task");
-const { sendWelcomeEmail, sendCancelEmail } = require("../emails/account");
 
 router.get("/test", (req, res) => {
   res.send("From a new file");
@@ -16,7 +14,6 @@ router.post("/users", async (req, res) => {
 
   try {
     await user.save();
-    sendWelcomeEmail(user.email, user.name);
     const token = await user.generateAuthToken();
     res.status(201).send({ user, token });
   } catch (error) {
@@ -53,7 +50,6 @@ router.post("/users/logoutAll", auth, async (req, res) => {
   try {
     req.user.tokens = [];
     await req.user.save();
-    console.log("user:", req.user);
     res.send();
   } catch (e) {
     res.sendStatus(500);
@@ -91,7 +87,6 @@ router.delete("/users/me", auth, async (req, res) => {
 
     if (!user) return res.sendStatus(400);
 
-    sendCancelEmail(user.email, user.name);
     res.send(user);
   } catch (e) {
     res.sendStatus(500);
